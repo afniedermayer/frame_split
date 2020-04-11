@@ -1,6 +1,6 @@
 # LaTeX Split Frame
 
-Splits a `frame` in a LaTeX beamer presentation.
+Splits a `frame` in a [LaTeX beamer presentation](https://en.wikibooks.org/wiki/LaTeX/Presentations).
 
 ## Sublime Text 3 Plugin
 
@@ -15,13 +15,19 @@ Also download the file `Default (Windows).sublime-keymap` into your Sublime User
 ]
 ```
 
+### Usage
+
+Set your cursor at the place where you wish to split the frame. Press "Ctrl-Alt-s". The frame is replaced by the split frame.
+
 ### Example
 
 Input:
-![screenshot of input](screenshots/sublime_before.png "before")
+
+<img src="screenshots/sublime_before.png" width="400" />
 
 Press "Ctrl-Alt-s", output:
-![screenshot of generated output](screenshots/sublime_after.png "after")
+
+<img src="screenshots/sublime_after.png" width="400" />
 
 
 ## Standalone Script with Graphical User Interface
@@ -41,7 +47,15 @@ Copy and paste LaTeX code into the input text box, place cursor at desired split
 ### Example
 
 Input:
-![screenshot of input](screenshots/before.png "before")
+
+<img src="screenshots/before.png" width="600" />
 
 Output:
-![screenshot of generated output](screenshots/after.png "after")
+
+<img src="screenshots/after.png" width="600" />
+
+## Limitations
+
+The code does not distinguish between LaTeX comments and regular LaTeX code. So if your have commented out `\begin{frame}` or similar code inside the frame, it might generate wrong output.
+
+The code is made to split frames at the cursor when the cursor is in an `itemize` environment or if the cursor is not in any environment. Splitting will be incorrect if the cursor is in an other environment, e.g. an `enumerate` environment.
