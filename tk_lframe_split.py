@@ -10,25 +10,30 @@ class Application(ttk.Frame):
     def __init__(self, master=None):
         super().__init__(master, width=50, height=50)
         self.master = master
-        self.pack()
+        self.pack(fill="both", expand=True)
         self.master.title('Split LaTeX Beamer Frame')
         self.create_widgets()
+        self.master.minsize(350, 150)
 
     def create_widgets(self):
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(3, weight=1)
+        self.columnconfigure(0, weight=3)
         opts = {"padx": 20, "pady": 5}
         ttk.Label(self, text="Input Text").grid(row=0, column=0, columnspan=2,
                  sticky=tk.W, **opts)
         self.clear_button = ttk.Button(self, text="Clear", command=self.clear_input, underline=0)
         self.clear_button.grid(row=0, column=2, sticky=tk.E, **opts)
         self.input_text = scrolledtext.ScrolledText(self, height=8)
-        self.input_text.grid(row=1, column=0, columnspan=3, **opts)
+        self.input_text.grid(row=1, column=0, columnspan=3, sticky=tk.E+tk.W+tk.N+tk.S, **opts)
         self.split_button = ttk.Button(self, text="Split text and copy to clipboard", 
             command=self.split_text, underline=0)
-        self.split_button.grid(row=3, column=1)
-        ttk.Label(self, text="Output Text").grid(row=4, column=0, columnspan=3,
+        self.split_button.grid(row=2, column=2, sticky=tk.E, **opts)
+        ttk.Label(self, text="Output Text").grid(row=2, column=0, columnspan=3,
                  sticky=tk.W, **opts)
         self.output_text = scrolledtext.ScrolledText(self, height=8)
-        self.output_text.grid(row=5, column=0, columnspan=3, pady=(5,20), padx=20)
+        self.output_text.grid(row=3, column=0, columnspan=3, sticky=tk.E+tk.W+tk.N+tk.S,
+            pady=(5,20), padx=20)
         self.master.bind('<Alt-s>', lambda event: self.split_text())
         self.master.bind('<Alt-c>', lambda event: self.clear_input())
 
