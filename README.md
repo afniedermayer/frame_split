@@ -56,6 +56,6 @@ Output:
 
 ## Limitations
 
-The code does not distinguish between LaTeX comments and regular LaTeX code. So if your have commented out `\begin{frame}` or similar code inside the frame, it might generate wrong output.
+The code does not distinguish between LaTeX comments and regular LaTeX code. So if you have commented out `\begin{frame}` or similar code inside the frame, it might generate wrong output.
 
 The code is made to split frames at the cursor when the cursor is in an `itemize` environment or if the cursor is not in any environment. Splitting will be incorrect if the cursor is in an other environment, e.g. an `enumerate` environment.
