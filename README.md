@@ -1,8 +1,8 @@
 # LaTeX Split Frame
 
-## Sublime Text 3 Plugin
-
 Splits a `frame` in a LaTeX beamer presentation.
+
+## Sublime Text 3 Plugin
 
 ### Installation
 
