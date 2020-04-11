@@ -1,6 +1,6 @@
 import sublime
 import sublime_plugin 
-from .latex_frame_split import get_environment, split_frame
+from .latex_frame_split import split_frame
 
 LSPLIT_WARNING = 'lsplit_warning'
 
@@ -31,23 +31,23 @@ class LsplitCommand(sublime_plugin.TextCommand):
                 frame.outer.begin + len(new_frame)))
 
     def show_warning(self, message:str) -> None:
-            region = self.view.sel()[0]
-            html_message = """
-                <body id='{}'>
-                  <style>
-                    a {{ text-decoration: none; }}
-                    div {{ 
-                      background-color: red; 
-                      border: 3px solid red; 
-                      border-radius: 3px; 
-                    }}
-                  </style>
-                  <div>
-                    {}&nbsp;<a href='close_warning'>\N{MULTIPLICATION SIGN}</a>
-                  </div>
-                </body>""".format(LSPLIT_WARNING, message)
-            self.view.add_phantom(LSPLIT_WARNING, region, html_message, 
-                sublime.LAYOUT_BELOW,
-                on_navigate=lambda href: self.view.erase_phantoms(LSPLIT_WARNING)
-            )
+        region = self.view.sel()[0]
+        html_message = """
+            <body id='{}'>
+              <style>
+                a {{ text-decoration: none; }}
+                div {{ 
+                  background-color: red; 
+                  border: 3px solid red; 
+                  border-radius: 3px; 
+                }}
+              </style>
+              <div>
+                {}&nbsp;<a href='close_warning'>\N{MULTIPLICATION SIGN}</a>
+              </div>
+            </body>""".format(LSPLIT_WARNING, message)
+        self.view.add_phantom(LSPLIT_WARNING, region, html_message, 
+            sublime.LAYOUT_BELOW,
+            on_navigate=lambda href: self.view.erase_phantoms(LSPLIT_WARNING)
+        )
 
