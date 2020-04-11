@@ -1,4 +1,3 @@
-from TexSoup import TexSoup # works with TexSoup version 0.1
 import tkinter as tk
 from tkinter import scrolledtext
 from tkinter import messagebox
@@ -6,54 +5,6 @@ from tkinter import ttk
 import sys
 import traceback
 from latex_frame_split import get_environment, split_frame
-
-def items_before(original_latex:str, split:int) -> str:
-    r"""returns a frame that contains items 1 to split
-    from the itemize in the original frame
-    >>> print(items_before(r'''\begin{frame}
-    ... \begin{itemize}
-    ... \item foo
-    ... \item bar
-    ... \item
-    ... \end{itemize}
-    ... \end{frame}
-    ... ''',2))
-    \begin{frame}
-    <BLANKLINE>
-    \begin{itemize}
-    <BLANKLINE>
-    \item foo
-    \item bar\end{itemize}
-    <BLANKLINE>
-    \end{frame}"""
-    soup=TexSoup(original_latex)
-    children=list(soup.itemize.children)
-    for child in children[split:]: 
-        soup.itemize.remove_child(child)
-    return str(soup)
-
-def items_after(original_latex:str, split:int) -> str:
-    r"""returns a frame that contains items split+1 to the end
-    from the itemize in the original frame
-    >>> print(items_after(r'''\begin{frame}
-    ... \begin{itemize}
-    ... \item foo
-    ... \item bar
-    ... \item
-    ... \end{itemize}
-    ... \end{frame}''', 2))
-    \begin{frame}
-    <BLANKLINE>
-    \begin{itemize}
-    <BLANKLINE>
-    \item\end{itemize}
-    <BLANKLINE>
-    \end{frame}"""    
-    soup=TexSoup(original_latex)
-    children=list(soup.itemize.children)
-    for child in children[:split]: 
-        soup.itemize.remove_child(child)
-    return str(soup)
 
 class Application(ttk.Frame):
     def __init__(self, master=None):
