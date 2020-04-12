@@ -1,15 +1,41 @@
 from collections import namedtuple
-import re
+import re, os
 
 class Environment(namedtuple('Environment', ['inner', 'outer'])):
-    def __contains__(self, other:'Environment'):
+    def __contains__(self, other:'Environment') -> bool:
         return not self.found() or (other.found() and 
             self.inner.begin < other.outer.begin < other.outer.end < self.inner.end
         )
-    def found(self):
+    def found(self) -> bool:
         return self.inner is not None and self.outer is not None
 
 Index = namedtuple('Index', ['begin', 'end'])
+
+def find_comment(text:str) -> int:
+    if '%' not in text:
+        return -1
+    escaped = False
+    for i, c in enumerate(text):
+        if not escaped:
+            if c == '%': 
+                return i
+            elif c == '\\':
+                escaped = True
+        else:
+            escaped = False
+    return -1
+
+def replace_comment_in_line(text:str) -> str:
+    comment_index = find_comment(text)
+    if comment_index == -1:
+        return text
+    elif comment_index == 0:
+        return (len(text)-comment_index)*' '
+    else:
+        return text[:comment_index] + (len(text)-comment_index)*' '
+
+def replace_comments(text:str) -> str:
+    return '\n'.join(replace_comment_in_line(line) for line in text.split('\n'))
 
 def get_environment(text:str, position:int, begin_token:str, end_token:str) -> Environment:
     current_position = position
@@ -43,6 +69,11 @@ def split_frame(buffer:str, position:int) -> tuple:
     part of the itemize environment. The split of the itemize 
     environment is around `position` (number of characters from
     beginning of buffer).
+
+    Returns a tuple (frame, frame1, frame2), where frame is an
+    Environment with the coordinates of the frame, frame1 and frame2
+    are strings with the two frames resulting from the split.
+
     Usage example:
     >>> buffer = r'''text before frame
     ... \begin{frame}
@@ -68,11 +99,14 @@ def split_frame(buffer:str, position:int) -> tuple:
     
     If there is no itemize in the frame, the frame is split at `position`.
     """
-    frame = get_environment(buffer, position, r'\begin{frame}', r'\end{frame}')
+    buffer_without_comments = replace_comments(buffer)
+    frame = get_environment(buffer_without_comments, position, r'\begin{frame}', r'\end{frame}')
     if not frame.found():
         raise ValueError(r'Cursor not between \begin{frame} and \end{frame}.')
-    itemize = get_environment(buffer, position, r'\begin{itemize}', r'\end{itemize}')
-    enumerate_ = get_environment(buffer, position, r'\begin{enumerate}', r'\end{enumerate}')
+    itemize = get_environment(buffer_without_comments, position, 
+        r'\begin{itemize}', r'\end{itemize}')
+    enumerate_ = get_environment(buffer_without_comments, position, 
+        r'\begin{enumerate}', r'\end{enumerate}')
     if itemize in enumerate_:
         inner_env = itemize
         inner_env_name = 'itemize'
@@ -81,7 +115,7 @@ def split_frame(buffer:str, position:int) -> tuple:
         inner_env_name = 'enumerate'
     if inner_env not in frame:
         frame_options = r'(<.*>)?(\[.*\])?(\{.*\})?(\{.*\})?\s*(\\frametitle\{.*\})?'
-        m = re.match(frame_options, buffer[frame.inner.begin:frame.inner.end])
+        m = re.match(frame_options, buffer_without_comments[frame.inner.begin:frame.inner.end])
         if m is None:
             frame_options_length = 0
         else:
@@ -97,10 +131,11 @@ def split_frame(buffer:str, position:int) -> tuple:
         if len(second_part) > 0 and second_part[0] != '\n':
             second_part = '\n' + second_part
     else:
-        item1 = buffer.find(r'\item', inner_env.inner.begin, inner_env.inner.end)
+        item1 = buffer_without_comments.find(r'\item', inner_env.inner.begin, inner_env.inner.end)
         if item1 == -1:
             raise ValueError('No item in {}.'.format(inner_env_name))
-        split_position = buffer.find(r'\item', position-len(r'\item')+1, inner_env.inner.end)
+        split_position = buffer_without_comments.find(r'\item', position-len(r'\item')+1, 
+            inner_env.inner.end)
         if split_position == -1:
             raise ValueError('No item after cursor position.')
         frame_pre = buffer[frame.outer.begin:item1]
