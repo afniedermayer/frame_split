@@ -62,41 +62,10 @@ class Application(ttk.Frame):
     def show_warning(self, message):
         messagebox.showerror("Error", message)
 
-
-def main():
-    try:
-        while True:
-            print('paste frame (end with empty line): ')
-            s = ''
-            while True:
-                newline = input()
-                if newline == '': break
-                s += newline + '\n'
-            print()
-            split = int(input('split after item: '))
-            print()
-            print(str(items_before(s, split)))
-            print()
-            print(items_after(s, split))
-            print()
-            print('press Ctrl-C to exit')
-    except KeyboardInterrupt:
-        pass
-
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '-t':
-        main()
-    elif len(sys.argv) > 1 and sys.argv[1] == '-h':
-        print('split_latex_frame')
-        print('command line arguments:')
-        print(' -t: text interface (default: gui interface)')
-        print(' -h: help')
-    elif len(sys.argv) > 1:
-        print('unknown command line argument(s): ' + ' '.join(sys.argv[1:]))
-    else:
-        root = tk.Tk()
-        root.style = ttk.Style()
-        # root.style.theme_use("clam")
-        # root.geometry("300x300")
-        app = Application(master=root)
-        app.mainloop()
+    root = tk.Tk()
+    root.style = ttk.Style()
+    # root.style.theme_use("clam")
+    # root.geometry("300x300")
+    app = Application(master=root)
+    app.mainloop()
