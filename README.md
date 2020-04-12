@@ -1,6 +1,6 @@
 # LaTeX Split Frame
 
-Splits a `frame` in a [LaTeX beamer presentation](https://en.wikibooks.org/wiki/LaTeX/Presentations).
+Splits a `frame` in a [LaTeX beamer presentation](https://en.wikibooks.org/wiki/LaTeX/Presentations) at the cursor position. Works for a split position in an `itemize` environment, an `enumerate` environment and no environment.
 
 ## Sublime Text 3 Plugin
 
@@ -56,6 +56,6 @@ Output:
 
 ## Limitations
 
-The code does not distinguish between LaTeX comments and regular LaTeX code. So if you have commented out `\begin{frame}` or similar code inside the frame, it might generate wrong output.
+If the split position is in an `enumerate` environment, the numbering restarts at 1 in the second frame. Add `\setcounter{enumi}{N}` in the second frame in order to start counting at `N`. Use `\setcounter{enumii}{N}`, `\setcounter{enumiii}{N}`, etc. for nested `enumerate`s.
 
-The code is made to split frames at the cursor when the cursor is in an `itemize` environment or if the cursor is not in any environment. Splitting will be incorrect if the cursor is in an other environment, e.g. an `enumerate` environment.
+If the cursor is in a different environment than `itemize` or `enumerate`, the LaTeX code might be split incorrectly.
