@@ -1,7 +1,7 @@
 from collections import namedtuple
 import re, os
 
-class Environment(namedtuple('Environment', ['inner', 'outer'])):
+class Environment(namedtuple('Environment', ['name', 'inner', 'outer'])):
     def __contains__(self, other:'Environment') -> bool:
         return not self.found() or (other.found() and 
             self.inner.begin < other.outer.begin < other.outer.end < self.inner.end
@@ -37,7 +37,9 @@ def replace_comment_in_line(text:str) -> str:
 def replace_comments(text:str) -> str:
     return '\n'.join(replace_comment_in_line(line) for line in text.split('\n'))
 
-def get_environment(text:str, position:int, begin_token:str, end_token:str) -> Environment:
+def get_environment(text:str, position:int, name:str) -> Environment:
+    begin_token = '\\begin{' + name + '}'
+    end_token = '\\end{' + name + '}'
     current_position = position
     begin_outer = None
     while begin_outer is None:
@@ -59,8 +61,8 @@ def get_environment(text:str, position:int, begin_token:str, end_token:str) -> E
             current_position = end + len(end_token)
     end_outer = end_inner + len(end_token)
     if begin_outer == -1 or end_inner == -1:
-        return Environment(inner=None, outer=None)
-    return Environment(inner=Index(begin_inner, end_inner), 
+        return Environment(name=name, inner=None, outer=None)
+    return Environment(name=name, inner=Index(begin_inner, end_inner), 
         outer=Index(begin_outer, end_outer))
 
 def split_frame(buffer:str, position:int) -> tuple:
@@ -100,19 +102,15 @@ def split_frame(buffer:str, position:int) -> tuple:
     If there is no itemize in the frame, the frame is split at `position`.
     """
     buffer_without_comments = replace_comments(buffer)
-    frame = get_environment(buffer_without_comments, position, r'\begin{frame}', r'\end{frame}')
+    frame = get_environment(buffer_without_comments, position, 'frame')
     if not frame.found():
         raise ValueError(r'Cursor not between \begin{frame} and \end{frame}.')
-    itemize = get_environment(buffer_without_comments, position, 
-        r'\begin{itemize}', r'\end{itemize}')
-    enumerate_ = get_environment(buffer_without_comments, position, 
-        r'\begin{enumerate}', r'\end{enumerate}')
+    itemize = get_environment(buffer_without_comments, position, 'itemize')
+    enumerate_ = get_environment(buffer_without_comments, position, 'enumerate')
     if itemize in enumerate_:
         inner_env = itemize
-        inner_env_name = 'itemize'
     else:
         inner_env = enumerate_
-        inner_env_name = 'enumerate'
     if inner_env not in frame:
         frame_options = r'(<.*>)?(\[.*\])?(\{.*\})?(\{.*\})?\s*(\\frametitle\{.*\})?'
         m = re.match(frame_options, buffer_without_comments[frame.inner.begin:frame.inner.end])
@@ -133,7 +131,7 @@ def split_frame(buffer:str, position:int) -> tuple:
     else:
         item1 = buffer_without_comments.find(r'\item', inner_env.inner.begin, inner_env.inner.end)
         if item1 == -1:
-            raise ValueError('No item in {}.'.format(inner_env_name))
+            raise ValueError('No item in {}.'.format(inner_env.name))
         split_position = buffer_without_comments.find(r'\item', position-len(r'\item')+1, 
             inner_env.inner.end)
         if split_position == -1:
