@@ -14,12 +14,9 @@ Index = namedtuple('Index', ['begin', 'end'])
 def get_environment(text:str, position:int, begin_token:str, end_token:str) -> Environment:
     current_position = position
     begin_outer = None
-    # print('looking for begin')
     while begin_outer is None:
         begin = text.rfind(begin_token, 0, current_position)
         end = text.rfind(end_token, 0, current_position)
-        # print('begin: {}'.format(begin))
-        # print('end: {}'.format(end))
         if begin > end or begin == -1:
             begin_outer = begin
         else:
@@ -27,12 +24,9 @@ def get_environment(text:str, position:int, begin_token:str, end_token:str) -> E
     begin_inner = begin_outer + len(begin_token)
     current_position = position
     end_inner = None
-    # print('looking for begin')
     while end_inner is None:
         begin = text.find(begin_token, current_position)
         end = text.find(end_token, current_position)
-        # print('begin: {}'.format(begin))
-        # print('end: {}'.format(end))
         if begin > end or begin == -1 or end == -1:
             end_inner = end
         else:
@@ -40,9 +34,6 @@ def get_environment(text:str, position:int, begin_token:str, end_token:str) -> E
     end_outer = end_inner + len(end_token)
     if begin_outer == -1 or end_inner == -1:
         return Environment(inner=None, outer=None)
-    #     raise ValueError('"{}" missing'.format(begin_token))
-    # if end_inner == -1:
-    #     raise ValueError('"{}" missing'.format(end_token))        
     return Environment(inner=Index(begin_inner, end_inner), 
         outer=Index(begin_outer, end_outer))
 
@@ -82,9 +73,6 @@ def split_frame(buffer:str, position:int) -> tuple:
         raise ValueError(r'Cursor not between \begin{frame} and \end{frame}.')
     itemize = get_environment(buffer, position, r'\begin{itemize}', r'\end{itemize}')
     enumerate_ = get_environment(buffer, position, r'\begin{enumerate}', r'\end{enumerate}')
-    # if itemize is not None and not (frame.inner.begin < itemize.outer.begin < itemize.outer.end < frame.inner.end):
-    #     # raise ValueError('no itemize in current frame')
-    #     itemize = None
     if itemize in enumerate_:
         inner_env = itemize
         inner_env_name = 'itemize'
@@ -101,7 +89,6 @@ def split_frame(buffer:str, position:int) -> tuple:
         if frame.inner.begin + frame_options_length > position:
             raise ValueError('Cursor not in interior of frame, but on frame options.')
         frame_pre = buffer[frame.outer.begin:frame.inner.begin + frame_options_length]
-        # frame_pre = r'\begin{frame}'
         frame_post = r'\end{frame}'
         first_part = buffer[frame.inner.begin + frame_options_length:position]
         second_part = buffer[position:frame.inner.end]
