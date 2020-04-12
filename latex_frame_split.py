@@ -72,7 +72,7 @@ def split_frame(buffer:str, position:int) -> tuple:
     """
     frame = get_environment(buffer, position, r'\begin{frame}', r'\end{frame}')
     if frame is None:
-        raise ValueError(r'\begin{frame} or \end{frame} missing')
+        raise ValueError(r'Cursor not between \begin{frame} and \end{frame}.')
     itemize = get_environment(buffer, position, r'\begin{itemize}', r'\end{itemize}')
     # if itemize is not None and not (frame.inner.begin < itemize.outer.begin < itemize.outer.end < frame.inner.end):
     #     # raise ValueError('no itemize in current frame')
