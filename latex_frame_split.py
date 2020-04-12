@@ -1,7 +1,14 @@
 from collections import namedtuple
 import re
 
-Environment = namedtuple('Environment', ['inner', 'outer'])
+class Environment(namedtuple('Environment', ['inner', 'outer'])):
+    def __contains__(self, other:'Environment'):
+        return not self.found() or (other.found() and 
+            self.inner.begin < other.outer.begin < other.outer.end < self.inner.end
+        )
+    def found(self):
+        return self.inner is not None and self.outer is not None
+
 Index = namedtuple('Index', ['begin', 'end'])
 
 def get_environment(text:str, position:int, begin_token:str, end_token:str) -> Environment:
@@ -32,7 +39,7 @@ def get_environment(text:str, position:int, begin_token:str, end_token:str) -> E
             current_position = end + len(end_token)
     end_outer = end_inner + len(end_token)
     if begin_outer == -1 or end_inner == -1:
-        return None
+        return Environment(inner=None, outer=None)
     #     raise ValueError('"{}" missing'.format(begin_token))
     # if end_inner == -1:
     #     raise ValueError('"{}" missing'.format(end_token))        
@@ -71,13 +78,20 @@ def split_frame(buffer:str, position:int) -> tuple:
     If there is no itemize in the frame, the frame is split at `position`.
     """
     frame = get_environment(buffer, position, r'\begin{frame}', r'\end{frame}')
-    if frame is None:
+    if not frame.found():
         raise ValueError(r'Cursor not between \begin{frame} and \end{frame}.')
     itemize = get_environment(buffer, position, r'\begin{itemize}', r'\end{itemize}')
+    enumerate_ = get_environment(buffer, position, r'\begin{enumerate}', r'\end{enumerate}')
     # if itemize is not None and not (frame.inner.begin < itemize.outer.begin < itemize.outer.end < frame.inner.end):
     #     # raise ValueError('no itemize in current frame')
     #     itemize = None
-    if itemize is None or not (frame.inner.begin < itemize.outer.begin < itemize.outer.end < frame.inner.end):
+    if itemize in enumerate_:
+        inner_env = itemize
+        inner_env_name = 'itemize'
+    else:
+        inner_env = enumerate_
+        inner_env_name = 'enumerate'
+    if inner_env not in frame:
         frame_options = r'(<.*>)?(\[.*\])?(\{.*\})?(\{.*\})?\s*(\\frametitle\{.*\})?'
         m = re.match(frame_options, buffer[frame.inner.begin:frame.inner.end])
         if m is None:
@@ -85,7 +99,7 @@ def split_frame(buffer:str, position:int) -> tuple:
         else:
             frame_options_length = m.end()
         if frame.inner.begin + frame_options_length > position:
-            raise ValueError('cursor not in interior of frame, but on frame options')
+            raise ValueError('Cursor not in interior of frame, but on frame options.')
         frame_pre = buffer[frame.outer.begin:frame.inner.begin + frame_options_length]
         # frame_pre = r'\begin{frame}'
         frame_post = r'\end{frame}'
@@ -96,16 +110,16 @@ def split_frame(buffer:str, position:int) -> tuple:
         if len(second_part) > 0 and second_part[0] != '\n':
             second_part = '\n' + second_part
     else:
-        item1 = buffer.find(r'\item', itemize.inner.begin, itemize.inner.end)
+        item1 = buffer.find(r'\item', inner_env.inner.begin, inner_env.inner.end)
         if item1 == -1:
-            raise ValueError('no item in itemize')
-        split_position = buffer.find(r'\item', position-len(r'\item')+1, itemize.inner.end)
+            raise ValueError('No item in {}.'.format(inner_env_name))
+        split_position = buffer.find(r'\item', position-len(r'\item')+1, inner_env.inner.end)
         if split_position == -1:
-            raise ValueError('no item after cursor position')
+            raise ValueError('No item after cursor position.')
         frame_pre = buffer[frame.outer.begin:item1]
-        frame_post = buffer[itemize.inner.end:frame.outer.end]
+        frame_post = buffer[inner_env.inner.end:frame.outer.end]
         first_part = buffer[item1:split_position]
-        second_part = buffer[split_position:itemize.inner.end]
+        second_part = buffer[split_position:inner_env.inner.end]
     frame1 = frame_pre + first_part + frame_post
     frame2 = frame_pre + second_part + frame_post
     return frame, frame1, frame2    
