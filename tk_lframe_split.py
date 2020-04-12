@@ -36,6 +36,7 @@ class Application(ttk.Frame):
             pady=(5,20), padx=20)
         self.master.bind('<Alt-s>', lambda event: self.split_text())
         self.master.bind('<Alt-c>', lambda event: self.clear_input())
+        self.input_text.focus_set()
 
     def split_text(self):
         position = self.input_text.count('1.0', tk.INSERT)[0]
