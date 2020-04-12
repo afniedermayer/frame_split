@@ -57,6 +57,7 @@ class Application(ttk.Frame):
 
     def clear_input(self):
         self.input_text.delete("1.0", "end")
+        self.output_text.delete("1.0", "end")
         self.input_text.focus_set()
 
     def show_warning(self, message):
