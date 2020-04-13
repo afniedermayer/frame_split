@@ -29,7 +29,31 @@ def find_comment(text:str) -> int:
             escaped = False
     return -1
 
+RE_COMMENT = re.compile(r'[^\\](\\\\)*(%)')
+
+def find_comment_re(text:str) -> int:
+    if '%' not in text:
+        return -1
+    if text[0] == '%':
+        return 0
+    m=RE_COMMENT.search(text)
+    if m is None:
+        return -1
+    return m.start(2)
+
 def replace_comment_in_line(text:str) -> str:
+    comment_index = find_comment(text)
+    if comment_index == -1:
+        return text
+    elif comment_index == 0:
+        return (len(text)-comment_index)*' '
+    else:
+        return text[:comment_index] + (len(text)-comment_index)*' '
+
+def replace_comments_re(text:str) -> str:
+    return '\n'.join(replace_comment_in_line(line) for line in text.split('\n'))
+
+def replace_comment_in_line_re(text:str) -> str:
     comment_index = find_comment(text)
     if comment_index == -1:
         return text
