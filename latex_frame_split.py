@@ -120,7 +120,8 @@ def split_frame(buffer:str, position:int) -> tuple:
             frame_options_length = m.end()
         if frame.inner.begin + frame_options_length > position:
             raise ValueError('Cursor not in interior of frame, but on frame options.')
-        frame_pre = buffer[frame.outer.begin:frame.inner.begin + frame_options_length]
+        frame_pre1 = buffer[frame.outer.begin:frame.inner.begin + frame_options_length]
+        frame_pre2 = frame_pre1
         frame_post = r'\end{frame}'
         first_part = buffer[frame.inner.begin + frame_options_length:position]
         second_part = buffer[position:frame.inner.end]
@@ -136,10 +137,26 @@ def split_frame(buffer:str, position:int) -> tuple:
             inner_env.inner.end)
         if split_position == -1:
             raise ValueError('No item after cursor position.')
-        frame_pre = buffer[frame.outer.begin:item1]
+        frame_pre1 = buffer[frame.outer.begin:item1]
+        if inner_env.name == 'enumerate':
+            env_before_split = buffer_without_comments[inner_env.inner.begin:split_position]
+            counter = len(re.findall(r'\\item', env_before_split))
+            enum_level = 'enumi'
+            # m = re.search(r'\\setcounter\{(enum[iv]+)\}\{(.*)\}', env_string)
+            # if m is not None:
+            #     enum_level = m.group(1)
+            #     try:
+            #         counter += int(m.group(2))
+            #     except ValueError:
+            #         counter = m.group(2)
+            frame_pre2 = buffer[frame.outer.begin:inner_env.inner.begin] + '\n' + \
+                r'\setcounter{{{}}}{{{}}}'.format(enum_level, counter) + \
+                buffer[inner_env.inner.begin:item1]
+        else:
+            frame_pre2 = frame_pre1
         frame_post = buffer[inner_env.inner.end:frame.outer.end]
         first_part = buffer[item1:split_position]
         second_part = buffer[split_position:inner_env.inner.end]
-    frame1 = frame_pre + first_part + frame_post
-    frame2 = frame_pre + second_part + frame_post
+    frame1 = frame_pre1 + first_part + frame_post
+    frame2 = frame_pre2 + second_part + frame_post
     return frame, frame1, frame2    

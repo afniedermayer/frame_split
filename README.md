@@ -56,6 +56,6 @@ Output:
 
 ## Limitations
 
-If the split position is in an `enumerate` environment, the numbering restarts at 1 in the second frame. Add `\setcounter{enumi}{N}` in the second frame in order to start counting at `N`. Use `\setcounter{enumii}{N}`, `\setcounter{enumiii}{N}`, etc. for nested `enumerate`s.
+Splitting an `enumerate` environment is programmed to split a non-nested `enumerate` that starts counting items at 1. In particular, the `enumerate` in the second frame starts with `\setcounter{enumi}{N}` where `N` is the number of `\item`s before the split. If the split position is in a level two enumerate, `enumi` has to be manually replaced by `enumii`. The same holds for level three `enumerate`s, etc. If the `enumerate` didn't start counting at 1 but at some `M`>1, i.e. it contained a `\setcounter{enumi}{M}`, then the `setcounter` command has to be manually replaced by `\setcounter{enumi}{M+N}`.
 
-If the cursor is in a different environment than `itemize` or `enumerate`, the LaTeX code might be split incorrectly.
+If the cursor is in a different environment than `itemize` or `enumerate`, the result of splitting the frame might be invalid LaTeX code.
