@@ -1,6 +1,10 @@
 from collections import namedtuple
 import re, os
 
+ROMANS = 'i', 'ii', 'iii', 'iv' # enumerate allows only 4 levels of nesting
+RE_ENVIRONMENTS = re.compile(r'\\begin\{(.*?)\}.*?\\end\{\1\}', flags=re.DOTALL)
+RE_FRAME_OPTIONS = re.compile(r'(<.*>)?(\[.*\])?(\{.*\})?(\{.*\})?\s*(\\frametitle\{.*\})?')
+
 class Environment(namedtuple('Environment', ['name', 'inner', 'outer'])):
     def __contains__(self, other:'Environment') -> bool:
         return not self.found() or (other.found() and 
@@ -112,8 +116,7 @@ def split_frame(buffer:str, position:int) -> tuple:
     else:
         inner_env = enumerate_
     if inner_env not in frame:
-        frame_options = r'(<.*>)?(\[.*\])?(\{.*\})?(\{.*\})?\s*(\\frametitle\{.*\})?'
-        m = re.match(frame_options, buffer_without_comments[frame.inner.begin:frame.inner.end])
+        m = RE_FRAME_OPTIONS.match(buffer_without_comments[frame.inner.begin:frame.inner.end])
         if m is None:
             frame_options_length = 0
         else:
@@ -139,9 +142,15 @@ def split_frame(buffer:str, position:int) -> tuple:
             raise ValueError('No item after cursor position.')
         frame_pre1 = buffer[frame.outer.begin:item1]
         if inner_env.name == 'enumerate':
-            env_before_split = buffer_without_comments[inner_env.inner.begin:split_position]
+            env_before_split = RE_ENVIRONMENTS.sub('', 
+                buffer_without_comments[inner_env.inner.begin:split_position])
             counter = len(re.findall(r'\\item', env_before_split))
-            enum_level = 'enumi'
+            # frame_before_env = re.sub(r'\\begin\{(.*?)\}.*?\\end\{\1\}', '', 
+            #     buffer_without_comments[frame.inner.begin:inner_env.outer.begin], flags=re.DOTALL)
+            frame_before_env = buffer_without_comments[frame.inner.begin:inner_env.outer.begin]
+            level = len(re.findall(r'\\begin\{enumerate\}', frame_before_env)) - \
+                len(re.findall(r'\\end\{enumerate\}', frame_before_env))
+            enum_level = 'enum' + ROMANS[min(level, len(ROMANS)-1)]
             # m = re.search(r'\\setcounter\{(enum[iv]+)\}\{(.*)\}', env_string)
             # if m is not None:
             #     enum_level = m.group(1)
